@@ -1,0 +1,15 @@
+[theme]
+# Adicionar suporte ao tema escuro:
+primaryColor="#1f77b4"
+backgroundColor="#0e1117"
+secondaryBackgroundColor="#262730"
+textColor="#fafafa"
+font="sans serif"
+
+[theme.light]
+base="light"  # Configuração padrão para tema claro
+primaryColor="#1f77b4"
+backgroundColor="#ffffff"
+secondaryBackgroundColor="#f0f2f6"
+textColor="#000000"
+font="sans serif"  # Font pode ser "serif", "sans serif" ou "monospace"

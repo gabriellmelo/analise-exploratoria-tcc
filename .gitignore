@@ -1,0 +1,15 @@
+.env
+# Ambiente Virtual
+.venv/
+
+# Arquivos do Jupyter Notebook
+*.ipynb_checkpoints/
+
+# Dependências de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Configurações de IDE
+.vscode/
