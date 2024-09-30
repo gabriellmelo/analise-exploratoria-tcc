@@ -7,6 +7,8 @@ import requests
 import maritalk
 import os
 from dotenv import load_dotenv
+from PIL import Image
+Image.MAX_IMAGE_PIXELS = None  # Isso desativa a proteção contra "Decompression Bomb"
 
 # Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
