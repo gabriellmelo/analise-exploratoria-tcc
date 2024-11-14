@@ -12,7 +12,7 @@ Image.MAX_IMAGE_PIXELS = None  # Isso desativa a proteção contra "Decompressio
 load_dotenv()
 
 # Carregar a chave da API Maritaca
-MARITACA_API_KEY = st.secrets("MARITACA_API_KEY")
+MARITACA_API_KEY = st.secrets["MARITACA_API_KEY"]
 #MARITACA_API_KEY = os.getenv("MARITACA_API_KEY")
 # Configuração da página
 st.set_page_config(page_title='Análise de Óbitos em Franca/SP', layout='wide', page_icon=':bar_chart:')
