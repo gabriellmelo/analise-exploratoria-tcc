@@ -1,9 +1,7 @@
+import re
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import matplotlib.pyplot as plt
-import seaborn as sns
-import requests
 import maritalk
 import os
 from dotenv import load_dotenv
@@ -15,51 +13,145 @@ load_dotenv()
 
 # Carregar a chave da API Maritaca
 MARIACA_API_KEY = os.getenv("MARITACA_API_KEY")
+# Configuração da página
+st.set_page_config(page_title='Análise de Óbitos em Franca/SP', layout='wide', page_icon=':bar_chart:')
 
-# Função para detectar o tipo de pergunta
-def detectar_tipo_pergunta(pergunta):
-    if "ano" in pergunta.lower():
-        return "ano"
-    elif "faixa etária" in pergunta.lower():
-        return "faixa_etaria"
-    elif "dia da semana" in pergunta.lower():
-        return "dia_semana"
-    else:
-        return "geral"
+def load_data():
+    data = pd.read_csv('obitos_final_nov.csv', delimiter=';')
+    return data
 
-# Função para gerar o contexto apropriado com base nos dados
-def gerar_contexto(data, tipo_pergunta):
-    if tipo_pergunta == "ano":
-        obitos_por_ano = data.groupby('Ano do BO')['Ano do BO'].count().to_dict()
-        contexto = "Aqui estão os óbitos em Franca por ano:\n"
-        for ano, qtd in obitos_por_ano.items():
-            contexto += f"No ano de {ano}, houve {qtd} óbitos.\n"
-    elif tipo_pergunta == "faixa_etaria":
-        obitos_por_faixa = data.groupby('Faixa etaria')['Faixa etaria'].count().to_dict()
-        contexto = "Aqui estão os óbitos por faixa etária:\n"
-        for faixa, qtd in obitos_por_faixa.items():
-            contexto += f"Na faixa etária {faixa}, houve {qtd} óbitos.\n"
-    elif tipo_pergunta == "dia_semana":
-        obitos_por_dia = data.groupby('Dia da Semana')['Dia da Semana'].count().to_dict()
-        contexto = "Aqui estão os óbitos por dia da semana:\n"
-        for dia, qtd in obitos_por_dia.items():
-            contexto += f"No dia {dia}, houve {qtd} óbitos.\n"
-    else:
-        contexto = "Aqui estão os dados gerais sobre os óbitos em Franca."
-    
+data = load_data()
+
+# Funções de contexto para cada pergunta
+def contexto_obitos_2021(data):
+    total_obitos = data[data['Ano'] == 2021].shape[0]
+    contexto = f"No ano de 2021, ocorreram {total_obitos} óbitos em Franca."
     return contexto
 
-# Função para obter resposta da Mariaca AI com o contexto gerado
+def contexto_faixa_etaria_mais_afetada(data):
+    faixa_etaria_mais_afetada = data['Faixa etaria'].value_counts().idxmax()
+    total = data['Faixa etaria'].value_counts().max()
+    contexto = f"A faixa etária mais afetada por acidentes é {faixa_etaria_mais_afetada}, com {total} óbitos."
+    return contexto
+
+def contexto_bairro_mais_obitos(data):
+    # Excluir os registros onde o bairro é "Bairro não identificado"
+    data_bairro = data[data['Bairro'] != 'Bairro não identificado']
+    if data_bairro.empty:
+        contexto = "Não há dados disponíveis sobre os bairros identificados."
+    else:
+        bairro_mais_obitos = data_bairro['Bairro'].value_counts().idxmax()
+        total = data_bairro['Bairro'].value_counts().max()
+        contexto = f"O bairro com mais óbitos é {bairro_mais_obitos}, com {total} óbitos."
+    return contexto
+
+def contexto_tipo_via_mais_obitos(data):
+    tipo_via_mais_obitos = data['Tipo de Via'].value_counts().idxmax()
+    total = data['Tipo de Via'].value_counts().max()
+    contexto = f"O tipo de via com mais óbitos é {tipo_via_mais_obitos}, com {total} óbitos."
+    return contexto
+
+def contexto_obitos_por_dia_semana(data):
+    obitos_por_dia = data['Dia da Semana'].value_counts().to_dict()
+    contexto = "Número de óbitos por dia da semana:\n"
+    for dia, total in obitos_por_dia.items():
+        contexto += f"{dia}: {total} óbitos\n"
+    return contexto
+
+def contexto_horario_mais_obitos(data):
+    horario_mais_obitos = data['Hora do Sinistro'].value_counts().idxmax()
+    total = data['Hora do Sinistro'].value_counts().max()
+    contexto = f"O horário com mais óbitos é às {horario_mais_obitos} horas, com {total} óbitos."
+    return contexto
+
+def contexto_sexo_mais_acidentes(data):
+    sexo_mais_acidentes = data['Sexo'].value_counts().idxmax()
+    total = data['Sexo'].value_counts().max()
+    contexto = f"O sexo com mais acidentes é {sexo_mais_acidentes}, com {total} ocorrências."
+    return contexto
+
+def contexto_mes_mais_acidentes(data):
+    mes_mais_acidentes = data['Mes do Sinistro'].value_counts().idxmax()
+    total = data['Mes do Sinistro'].value_counts().max()
+    contexto = f"O mês com mais acidentes é {mes_mais_acidentes}, com {total} acidentes."
+    return contexto
+
+def contexto_dia_mes_mais_acidentes(data):
+    dia_mes_mais_acidentes = data['Dia do Sinistro'].value_counts().idxmax()
+    total = data['Dia do Sinistro'].value_counts().max()
+    contexto = f"O dia do mês com mais acidentes é {dia_mes_mais_acidentes}, com {total} acidentes."
+    return contexto
+
+def contexto_periodo_dia_mais_obitos(data):
+    periodo_mais_obitos = data['Turno'].value_counts().idxmax()
+    total = data['Turno'].value_counts().max()
+    contexto = f"O período do dia com mais óbitos é {periodo_mais_obitos}, com {total} óbitos."
+    return contexto
+
+def contexto_meio_locomocao_mais_obitos(data):
+    meio_locomocao_mais_obitos = data['Meio de locomocao da vitima'].value_counts().idxmax()
+    total = data['Meio de locomocao da vitima'].value_counts().max()
+    contexto = f"O meio de locomoção com mais óbitos é {meio_locomocao_mais_obitos}, com {total} óbitos."
+    return contexto
+
+def contexto_tipos_acidentes_mais_comuns(data):
+    tipos_acidentes = data['Tipo de Sinistro'].value_counts().head(5).to_dict()
+    contexto = "Os tipos de acidentes mais comuns são:\n"
+    for tipo, total in tipos_acidentes.items():
+        contexto += f"{tipo}: {total} ocorrências\n"
+    return contexto
+
+def contexto_distribuicao_obitos_por_tipo_vitima(data, pergunta):
+    # Extrair o ano da pergunta
+    match = re.search(r'em (\d{4})', pergunta)
+    if match:
+        ano = int(match.group(1))
+        data_ano = data[data['Ano'] == ano]
+        distribuicao = data_ano['Tipo de vitima'].value_counts().to_dict()
+        contexto = f"Distribuição de óbitos por tipo de vítima em {ano}:\n"
+        for tipo, total in distribuicao.items():
+            contexto += f"{tipo}: {total} óbitos\n"
+    else:
+        contexto = "Por favor, especifique o ano para a análise."
+    return contexto
+
+# Dicionário de mapeamento de perguntas para funções
+def contexto_default(data):
+    return "Desculpe, não tenho informações para responder a essa pergunta."
+
+pergunta_para_funcao = {
+    "Quantos óbitos ocorreram em 2021?": contexto_obitos_2021,
+    "Qual a faixa etária mais afetada por acidentes?": contexto_faixa_etaria_mais_afetada,
+    "Em qual bairro ocorreram mais óbitos?": contexto_bairro_mais_obitos,
+    "Qual o tipo de via com mais óbitos?": contexto_tipo_via_mais_obitos,
+    "Quantos óbitos ocorreram em cada dia da semana?": contexto_obitos_por_dia_semana,
+    "Qual o horário com mais óbitos?": contexto_horario_mais_obitos,
+    "Qual o sexo com mais acidentes?": contexto_sexo_mais_acidentes,
+    "Qual o mês com mais acidentes?": contexto_mes_mais_acidentes,
+    "Qual o dia do mês com mais acidentes?": contexto_dia_mes_mais_acidentes,
+    "Qual o período do dia com mais óbitos?": contexto_periodo_dia_mais_obitos,
+    "Qual o meio de locomoção com mais óbitos?": contexto_meio_locomocao_mais_obitos,
+    "Quais os tipos de acidentes mais comuns?": contexto_tipos_acidentes_mais_comuns,
+    "Qual a distribuição de óbitos por tipo de vítima (condutor, passageiro, pedestre) em [ano]?": contexto_distribuicao_obitos_por_tipo_vitima,
+}
+
+# Função para obter resposta da Maritaca AI com o contexto gerado
 def obter_resposta_maritaca_ai(pergunta, data):
     try:
-        # Detectar o tipo de pergunta
-        tipo_pergunta = detectar_tipo_pergunta(pergunta)
-        
-        # Gerar o contexto com base no tipo de pergunta
-        contexto = gerar_contexto(data, tipo_pergunta)
+        # Verificar se a pergunta está no mapeamento
+        if pergunta in pergunta_para_funcao:
+            # Obter a função correspondente
+            funcao_contexto = pergunta_para_funcao[pergunta]
+            # Gerar o contexto
+            if pergunta == "Qual a distribuição de óbitos por tipo de vítima (condutor, passageiro, pedestre) em [ano]?":
+                contexto = funcao_contexto(data, pergunta)
+            else:
+                contexto = funcao_contexto(data)
+        else:
+            contexto = "Desculpe, não tenho informações para responder a essa pergunta."
         
         # Combinar a pergunta com o contexto
-        pergunta_com_contexto = f"{contexto}\n\nPergunta: {pergunta}"
+        prompt = f"Contexto:\n{contexto}\n\nPergunta: {pergunta}\nResposta:"
         
         # Configurar o modelo Maritaca AI
         model = maritalk.MariTalk(
@@ -67,16 +159,101 @@ def obter_resposta_maritaca_ai(pergunta, data):
             model="sabia-3"
         )
         
-        # Fazer a pergunta ao modelo, limitando a 200 tokens
-        response = model.generate(pergunta_com_contexto, max_tokens=200)
+        # Fazer a pergunta ao modelo
+        response = model.generate(prompt, max_tokens=500)
         answer = response["answer"]
         
         return answer
     except Exception as e:
         return f"Erro ao conectar com a API: {e}"
 
-# Configuração da página
-st.set_page_config(page_title='Análise de Óbitos em Franca/SP', layout='wide', page_icon=':bar_chart:')
+# Sidebar content
+st.sidebar.header("Informações Importantes")
+with st.sidebar.expander("O que você precisa saber sobre os dados disponíveis para esta análise."):
+    st.write(
+        """
+        Foram registrados **205 óbitos** no período de 2019 a 2023. Durante a análise, foram identificadas as seguintes lacunas nos dados:
+        - **31 bairros não identificados**.
+        - **9 óbitos** sem a informação sobre a **idade da vítima**.
+        - **12 registros** sem informações sobre o **tipo de acidente** (atropelamento, choque, tombamento, etc.).
+        - **6 casos** onde o **tipo de vítima** não foi informado (pedestre, motorista, etc.).
+        - **2 registros** com o **meio de locomoção da vítima** não identificado.
+        - **10 casos** com o **tipo de local do sinistro** não disponível.
+        - **11 registros** com o **logradouro** não identificado.
+        - **28 registros** sem informações sobre o **turno** do acidente.
+        
+        **Importante:** A ausência de informações em várias colunas pode comprometer a precisão e a profundidade das análises realizadas.
+        
+        Caso tenha dúvidas sobre a origem dos dados ou sobre o processo de tratamento e limpeza das informações, estamos à disposição para fornecer esclarecimentos detalhados.
+        """
+    )
+st.sidebar.markdown("---") 
+
+# Sidebar para filtro de ano
+st.sidebar.header("Filtrar por Ano")
+anos_disponiveis = [2019, 2020, 2021, 2022, 2023]
+ano_selecionado = st.sidebar.selectbox("Escolha o Ano", ["Todos"] + [str(ano) for ano in anos_disponiveis], index=0)
+
+# Carregar os dados e filtrar entre os anos de 2019 a 2023
+data = data[data['Ano'].isin([2019, 2020, 2021, 2022, 2023])]
+
+# Filtrar os dados de acordo com o ano selecionado
+if ano_selecionado != "Todos":
+    ano_selecionado = int(ano_selecionado)
+    data_filtrada = data.loc[data['Ano'] == ano_selecionado]
+else:
+    data_filtrada = data
+
+# Definir o ano anterior para cálculo dos deltas
+if ano_selecionado != "Todos" and ano_selecionado > 2019:
+    ano_anterior = ano_selecionado - 1
+    dados_ano_anterior = data[data['Ano'] == ano_anterior]
+else:
+    ano_anterior = None
+    dados_ano_anterior = pd.DataFrame()
+
+# Adicionar checkbox para exibir os dados brutos
+exibir_dados_brutos = st.sidebar.checkbox("Exibir Dados Brutos")
+
+# Exibir os dados brutos se o checkbox for marcado
+if exibir_dados_brutos:
+    st.subheader("Dados Brutos")
+    st.write(data_filtrada)
+    
+
+st.sidebar.header("Assistente de IA")
+pergunta_selecionada = st.sidebar.selectbox(
+    "Selecione uma pergunta:",
+    [
+        "Selecione uma pergunta...",  
+        "Quantos óbitos ocorreram em 2021?",
+        "Qual a faixa etária mais afetada por acidentes?",
+        "Em qual bairro ocorreram mais óbitos?",
+        "Qual o tipo de via com mais óbitos?",
+        "Quantos óbitos ocorreram em cada dia da semana?",
+        "Qual o horário com mais óbitos?",
+        "Qual o sexo com mais acidentes?",
+        "Qual o mês com mais acidentes?",
+        "Qual o dia do mês com mais acidentes?",
+        "Qual o período do dia com mais óbitos?",
+        "Qual o meio de locomoção com mais óbitos?",
+        "Quais os tipos de acidentes mais comuns?",
+        "Qual a distribuição de óbitos por tipo de vítima (condutor, passageiro, pedestre) em [ano]?"
+    ]
+)
+
+if st.sidebar.button("Enviar"):
+    if pergunta_selecionada:
+        resposta_ia = obter_resposta_maritaca_ai(pergunta_selecionada, data)
+        st.sidebar.write("**Resposta da IA:**")
+        st.sidebar.write(resposta_ia)
+    else:
+        st.sidebar.write("Por favor, selecione uma pergunta.")
+
+# Divisão de colunas (opcional)
+col1, col2 = st.columns(2)
+
+# Outras partes do código podem ser adicionadas aqui
 
 col1, col2 = st.columns([0.2, 0.8])  
 with col1:
@@ -107,34 +284,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-def load_data():
-    data = pd.read_excel('filtro-franca.xlsx', sheet_name='obitos_franca')
-    return data
-
-data = load_data()
-
-# Carregar os dados e filtrar entre os anos de 2019 a 2023
-data = data[data['Ano do BO'].isin([2019, 2020, 2021, 2022, 2023])]
-
-# Sidebar para filtro de ano
-st.sidebar.header("Filtrar por Ano")
-anos_disponiveis = [2019, 2020, 2021, 2022, 2023]
-ano_selecionado = st.sidebar.selectbox("Escolha o Ano", ["Todos"] + [str(ano) for ano in anos_disponiveis], index=0)
-
-# Filtrar os dados de acordo com o ano selecionado
-if ano_selecionado != "Todos":
-    ano_selecionado = int(ano_selecionado)
-    data_filtrada = data.loc[data['Ano do BO'] == ano_selecionado]
-else:
-    data_filtrada = data
-
-# Definir o ano anterior para cálculo dos deltas
-if ano_selecionado != "Todos" and ano_selecionado > 2019:
-    ano_anterior = ano_selecionado - 1
-    dados_ano_anterior = data[data['Ano do BO'] == ano_anterior]
-else:
-    ano_anterior = None
-    dados_ano_anterior = pd.DataFrame()
 
 # Métricas no topo
 st.subheader("Principais Insights")
@@ -178,14 +327,6 @@ else:
         st.metric("Óbitos de Pedestres", total_pedestres)  # Passar total de pedestres
         st.markdown("<div style='color:orange; font-size: 14px; margin-top: -15px;'>Sem comparação</div>", unsafe_allow_html=True)
 
-# Adicionar checkbox para exibir os dados brutos
-exibir_dados_brutos = st.sidebar.checkbox("Exibir Dados Brutos")
-
-# Exibir os dados brutos se o checkbox for marcado
-if exibir_dados_brutos:
-    st.subheader("Dados Brutos")
-    st.write(data_filtrada)
-
 def create_colored_bar_chart(data, x_column, y_column, title, color_column, color_scale):
     fig = px.bar(data, x=x_column, y=y_column, color=color_column, template='seaborn', color_continuous_scale=color_scale)
     fig.update_layout(
@@ -198,32 +339,19 @@ def create_colored_bar_chart(data, x_column, y_column, title, color_column, colo
     )
     return fig
 
-# Integração com a Mariaca AI
-st.sidebar.header("Assistente de IA")
-pergunta_usuario = st.sidebar.text_input("Faça uma pergunta sobre os dados:")
-
-if st.sidebar.button("Enviar"):
-    if pergunta_usuario:
-        resposta_ia = obter_resposta_maritaca_ai(pergunta_usuario, data_filtrada)
-        st.sidebar.write("**Resposta da IA:**")
-        st.sidebar.write(resposta_ia)
-    else:
-        st.sidebar.write("Por favor, insira uma pergunta.")
-
 col1, col2 = st.columns(2)
-
 # Gráfico 1: Quantidade de Sinistros por Ano 
 with col1:
     st.info("📊 Este gráfico mostra a quantidade de sinistros ao longo dos anos.")
-    sinistros_por_ano = data_filtrada.groupby('Ano do BO').size().reset_index(name='Quantidade')
-    fig1 = create_colored_bar_chart(sinistros_por_ano, x_column='Ano do BO', y_column='Quantidade', title='Quantidade de Sinistros por Ano', color_column='Quantidade', color_scale='Blues')
+    sinistros_por_ano = data_filtrada.groupby('Ano').size().reset_index(name='Quantidade')
+    fig1 = create_colored_bar_chart(sinistros_por_ano, x_column='Ano', y_column='Quantidade', title='Quantidade de Sinistros por Ano', color_column='Quantidade', color_scale='Blues')
     st.plotly_chart(fig1, use_container_width=True)
 
 # Gráfico 2: Quantidade de Vítimas Fatais por Ano 
 with col2:
     st.info("📊 Este gráfico exibe o número de vítimas fatais por ano, auxiliando na análise de mudanças nas fatalidades.")
-    vitimas_fatais_por_ano = data_filtrada.groupby('Ano do BO').size().reset_index(name='Vítimas Fatais')
-    fig2 = create_colored_bar_chart(vitimas_fatais_por_ano, x_column='Ano do BO', y_column='Vítimas Fatais', title='Quantidade de Vítimas Fatais por Ano', color_column='Vítimas Fatais', color_scale='Reds')
+    vitimas_fatais_por_ano = data_filtrada.groupby('Ano').size().reset_index(name='Vítimas Fatais')
+    fig2 = create_colored_bar_chart(vitimas_fatais_por_ano, x_column='Ano', y_column='Vítimas Fatais', title='Quantidade de Vítimas Fatais por Ano', color_column='Vítimas Fatais', color_scale='Reds')
     st.plotly_chart(fig2, use_container_width=True)
 
 col3, col4 = st.columns(2)
@@ -315,7 +443,7 @@ with col8:
 
 col9, col10 = st.columns(2)
 
-# Gráfico 10: Óbitos por Sexo 
+# Gráfico 9: Óbitos por Sexo 
 with col10:
     st.info("👫 Compare o número de óbitos fatais por sexo.")
     if 'Sexo' in data_filtrada.columns:
