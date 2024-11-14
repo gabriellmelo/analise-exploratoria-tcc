@@ -12,7 +12,7 @@ Image.MAX_IMAGE_PIXELS = None  # Isso desativa a proteção contra "Decompressio
 load_dotenv()
 
 # Carregar a chave da API Maritaca
-MARIACA_API_KEY = os.getenv("MARITACA_API_KEY")
+MARITACA_API_KEY = os.getenv("MARITACA_API_KEY")
 # Configuração da página
 st.set_page_config(page_title='Análise de Óbitos em Franca/SP', layout='wide', page_icon=':bar_chart:')
 
@@ -155,7 +155,7 @@ def obter_resposta_maritaca_ai(pergunta, data):
         
         # Configurar o modelo Maritaca AI
         model = maritalk.MariTalk(
-            key=MARIACA_API_KEY,
+            key=MARITACA_API_KEY,
             model="sabia-3"
         )
         
