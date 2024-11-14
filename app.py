@@ -12,7 +12,8 @@ Image.MAX_IMAGE_PIXELS = None  # Isso desativa a proteção contra "Decompressio
 load_dotenv()
 
 # Carregar a chave da API Maritaca
-MARITACA_API_KEY = os.getenv("MARITACA_API_KEY")
+MARITACA_API_KEY = st.secrets("MARITACA_API_KEY")
+#MARITACA_API_KEY = os.getenv("MARITACA_API_KEY")
 # Configuração da página
 st.set_page_config(page_title='Análise de Óbitos em Franca/SP', layout='wide', page_icon=':bar_chart:')
 
@@ -443,6 +444,21 @@ with col8:
 
 col9, col10 = st.columns(2)
 
+# Adicionar gráfico de barras para os 3 bairros com maiores índices de acidentes
+with col9:
+    st.info("🏘️ Este gráfico exibe os 3 bairros com maiores índices de acidentes.")
+    if 'Bairro' in data_filtrada.columns:
+        top3_bairros = data_filtrada['Bairro'].value_counts().reset_index(name='Quantidade')
+        top3_bairros = top3_bairros.rename(columns={'index': 'Bairro'})
+        top3_bairros = top3_bairros[top3_bairros['Bairro'] != 'Bairro não identificado'].head(3)
+        if not top3_bairros.empty:
+            fig_top3 = create_colored_bar_chart(top3_bairros, x_column='Bairro', y_column='Quantidade', title='Top 3 Bairros com Mais Acidentes', color_column='Quantidade', color_scale='Oranges')
+            st.plotly_chart(fig_top3, use_container_width=True)
+        else:
+            st.write("Nenhum dado disponível para os bairros.")
+    else:
+        st.write("Coluna 'Bairro' não encontrada nos dados.")
+
 # Gráfico 9: Óbitos por Sexo 
 with col10:
     st.info("👫 Compare o número de óbitos fatais por sexo.")
@@ -458,22 +474,22 @@ col11, col12 = st.columns(2)
 # Gráfico 11: Óbitos por Mês do Ano
 with col11:
     st.info("📅 Este gráfico mostra a distribuição de óbitos fatais ao longo dos meses do ano.")
-    if 'Mes do Obito' in data_filtrada.columns:
-        mes_do_ano = data_filtrada.groupby('Mes do Obito').size().reset_index(name='Quantidade')
-        fig11 = create_colored_bar_chart(mes_do_ano, x_column='Mes do Obito', y_column='Quantidade', title='Óbitos por Mês do Ano', color_column='Quantidade', color_scale='BuGn')
+    if 'Mes do Sinistro' in data_filtrada.columns:
+        mes_do_ano = data_filtrada.groupby('Mes do Sinistro').size().reset_index(name='Quantidade')
+        fig11 = create_colored_bar_chart(mes_do_ano, x_column='Mes do Sinistro', y_column='Quantidade', title='Acidentes por Mês do Ano', color_column='Quantidade', color_scale='BuGn')
         st.plotly_chart(fig11, use_container_width=True)
     else:
-        st.write("Coluna 'Mes do Obito' não encontrada nos dados.")
+        st.write("Coluna 'Mes do Sinistro' não encontrada nos dados.")
 
 # Gráfico 12: Óbitos por Dia do Mês
 with col12:
     st.info("📆 Veja como os óbitos fatais se distribuem ao longo dos dias de cada mês.")
-    if 'Dia do Obito' in data_filtrada.columns:
-        dia_do_mes = data_filtrada.groupby('Dia do Obito').size().reset_index(name='Quantidade')
-        fig12 = create_colored_bar_chart(dia_do_mes, x_column='Dia do Obito', y_column='Quantidade', title='Óbitos por Dia do Mês', color_column='Quantidade', color_scale='YlGnBu')
+    if 'Dia do Sinistro' in data_filtrada.columns:
+        dia_do_mes = data_filtrada.groupby('Dia do Sinistro').size().reset_index(name='Quantidade')
+        fig12 = create_colored_bar_chart(dia_do_mes, x_column='Dia do Sinistro', y_column='Quantidade', title='Acidentes por Dia do Mês', color_column='Quantidade', color_scale='YlGnBu')
         st.plotly_chart(fig12, use_container_width=True)
     else:
-        st.write("Coluna 'Dia do Obito' não encontrada nos dados.")
+        st.write("Coluna 'Dia do Sinistro' não encontrada nos dados.")
 
 # Lista de Contatos Úteis
 with st.expander("Contatos Úteis"):
