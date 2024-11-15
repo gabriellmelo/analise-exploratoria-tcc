@@ -1,4 +1,5 @@
 import re
+import time
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -36,7 +37,6 @@ def contexto_faixa_etaria_mais_afetada(data):
     return contexto
 
 def contexto_bairro_mais_obitos(data):
-    # Excluir os registros onde o bairro é "Bairro não identificado"
     data_bairro = data[data['Bairro'] != 'Bairro não identificado']
     if data_bairro.empty:
         contexto = "Não há dados disponíveis sobre os bairros identificados."
@@ -138,12 +138,10 @@ pergunta_para_funcao = {
 
 # Função para obter resposta da Maritaca AI com o contexto gerado
 def obter_resposta_maritaca_ai(pergunta, data):
+    time.sleep(2)
     try:
-        # Verificar se a pergunta está no mapeamento
         if pergunta in pergunta_para_funcao:
-            # Obter a função correspondente
             funcao_contexto = pergunta_para_funcao[pergunta]
-            # Gerar o contexto
             if pergunta == "Qual a distribuição de óbitos por tipo de vítima (condutor, passageiro, pedestre) em [ano]?":
                 contexto = funcao_contexto(data, pergunta)
             else:
@@ -151,7 +149,6 @@ def obter_resposta_maritaca_ai(pergunta, data):
         else:
             contexto = "Desculpe, não tenho informações para responder a essa pergunta."
         
-        # Combinar a pergunta com o contexto
         prompt = f"Contexto:\n{contexto}\n\nPergunta: {pergunta}\nResposta:"
         
         # Configurar o modelo Maritaca AI
@@ -160,7 +157,6 @@ def obter_resposta_maritaca_ai(pergunta, data):
             model="sabia-3"
         )
         
-        # Fazer a pergunta ao modelo
         response = model.generate(prompt, max_tokens=500)
         answer = response["answer"]
         
@@ -216,11 +212,20 @@ else:
 # Adicionar checkbox para exibir os dados brutos
 exibir_dados_brutos = st.sidebar.checkbox("Exibir Dados Brutos")
 
-# Exibir os dados brutos se o checkbox for marcado
-if exibir_dados_brutos:
-    st.subheader("Dados Brutos")
-    st.write(data_filtrada)
-    
+# Função para converter DataFrame em CSV
+@st.cache_data
+def convert_df(df):
+    return df.to_csv().encode("utf-8")
+
+csv = convert_df(data_filtrada)
+
+# Botão de download na sidebar
+st.sidebar.download_button(
+    label="Dados disponíveis para download em CSV",
+    data=csv,
+    file_name="obitos_final_nov.csv",
+    mime="text/csv",
+)    
 
 st.sidebar.header("Assistente de IA")
 pergunta_selecionada = st.sidebar.selectbox(
@@ -244,17 +249,17 @@ pergunta_selecionada = st.sidebar.selectbox(
 )
 
 if st.sidebar.button("Enviar"):
-    if pergunta_selecionada:
-        resposta_ia = obter_resposta_maritaca_ai(pergunta_selecionada, data)
-        st.sidebar.write("**Resposta da IA:**")
-        st.sidebar.write(resposta_ia)
-    else:
-        st.sidebar.write("Por favor, selecione uma pergunta.")
-
-# Divisão de colunas (opcional)
-col1, col2 = st.columns(2)
-
-# Outras partes do código podem ser adicionadas aqui
+    with st.sidebar:
+        placeholder = st.empty()
+        placeholder.write("Aguarde, processando a resposta...") 
+        if pergunta_selecionada:
+            resposta_ia = obter_resposta_maritaca_ai(pergunta_selecionada, data)
+            placeholder.empty() 
+            st.write("**Resposta da IA:**")
+            st.write(resposta_ia)
+        else:
+            placeholder.empty() 
+            st.write("Por favor, selecione uma pergunta.")
 
 col1, col2 = st.columns([0.2, 0.8])  
 with col1:
@@ -262,7 +267,7 @@ with col1:
 with col2:
     st.title("Análise de Óbitos em Acidentes de Trânsito na Cidade de Franca/SP")
     st.markdown("Fonte dos Dados Brutos: [Infosiga SP](https://www.infosiga.sp.gov.br/?name=identificacao4&contextId=8a80809939587c0901395881fc2b0004)")
-    st.markdown("Código Fonte: [GitHub](https://github.com.br)")
+    st.markdown("Código Fonte: [GitHub](https://github.com/gabriellmelo/analise-exploratoria-tcc)")
     st.markdown("Data de Atualização: 30/09/2024")
     st.markdown("---")
 
@@ -287,11 +292,16 @@ st.markdown("""
 
 
 # Métricas no topo
-st.subheader("Principais Insights")
+st.subheader("Insights")
 col1, col2, col3 = st.columns(3)
 
 # Total de óbitos
 total_obitos = len(data_filtrada)
+
+# Exibir os dados brutos se o checkbox for marcado
+if exibir_dados_brutos:
+    st.subheader("Dados Brutos")
+    st.write(data_filtrada)
 
 if ano_anterior is not None and not dados_ano_anterior.empty:
     total_obitos_anterior = len(dados_ano_anterior)
@@ -304,7 +314,7 @@ else:
 
 # Óbitos por Veículos Motorizados
 veiculos_motorizados = data_filtrada[data_filtrada['Meio de locomocao da vitima'].isin(['MOTOCICLETA', 'AUTOMOVEL', 'CAMINHAO'])]
-total_veiculos_motorizados = len(veiculos_motorizados)  # Total de veículos motorizados
+total_veiculos_motorizados = len(veiculos_motorizados)  
 
 if ano_anterior is not None and not dados_ano_anterior.empty:
     veiculos_motorizados_anterior = dados_ano_anterior[dados_ano_anterior['Meio de locomocao da vitima'].isin(['MOTOCICLETA', 'AUTOMOVEL', 'CAMINHAO'])]
@@ -317,7 +327,7 @@ else:
 
 # Óbitos de pedestres
 pedestres = data_filtrada[data_filtrada['Meio de locomocao da vitima'] == 'PEDESTRE']
-total_pedestres = len(pedestres)  # Total de pedestres
+total_pedestres = len(pedestres)  
 
 if ano_anterior is not None and not dados_ano_anterior.empty:
     pedestres_anterior = dados_ano_anterior[dados_ano_anterior['Meio de locomocao da vitima'] == 'PEDESTRE']
@@ -348,11 +358,12 @@ with col1:
     fig1 = create_colored_bar_chart(sinistros_por_ano, x_column='Ano', y_column='Quantidade', title='Quantidade de Sinistros por Ano', color_column='Quantidade', color_scale='Blues')
     st.plotly_chart(fig1, use_container_width=True)
 
-# Gráfico 2: Quantidade de Vítimas Fatais por Ano 
+# Gráfico 2: Distribuição de Óbitos por Tipo de Sinistro
 with col2:
-    st.info("📊 Este gráfico exibe o número de vítimas fatais por ano, auxiliando na análise de mudanças nas fatalidades.")
-    vitimas_fatais_por_ano = data_filtrada.groupby('Ano').size().reset_index(name='Vítimas Fatais')
-    fig2 = create_colored_bar_chart(vitimas_fatais_por_ano, x_column='Ano', y_column='Vítimas Fatais', title='Quantidade de Vítimas Fatais por Ano', color_column='Vítimas Fatais', color_scale='Reds')
+    st.info("🚧 Este gráfico exibe a distribuição de óbitos por tipo de sinistro.")
+    obitos_por_tipo_sinistro = data_filtrada['Tipo de Sinistro'].value_counts().reset_index(name='Quantidade')
+    obitos_por_tipo_sinistro = obitos_por_tipo_sinistro.rename(columns={'index': 'Tipo de Sinistro'})
+    fig2 = create_colored_bar_chart(obitos_por_tipo_sinistro, x_column='Tipo de Sinistro', y_column='Quantidade', title='Distribuição de Óbitos por Tipo de Sinistro', color_column='Quantidade', color_scale='Reds')
     st.plotly_chart(fig2, use_container_width=True)
 
 col3, col4 = st.columns(2)
@@ -367,35 +378,41 @@ with col3:
 # Gráfico 4: Distribuição de Sinistros por Tipo de Veículo 
 with col4:
     st.info("🚗 Este gráfico apresenta os tipos de veículos mais envolvidos em sinistros fatais.")
-    sinistros_por_veiculo = data_filtrada.groupby('Meio de locomocao da vitima').size().reset_index(name='Quantidade')
-    fig4 = create_colored_bar_chart(sinistros_por_veiculo, x_column='Meio de locomocao da vitima', y_column='Quantidade', title='Distribuição de Sinistros por Tipo de Veículo', color_column='Quantidade', color_scale='Oranges')
-    st.plotly_chart(fig4, use_container_width=True)
+    if 'Meio de locomocao da vitima' in data_filtrada.columns:
+        # Remover dados "NAO DISPONIVEL"
+        data_filtrada = data_filtrada[data_filtrada['Meio de locomocao da vitima'] != 'NAO DISPONIVEL']
+        
+        sinistros_por_veiculo = data_filtrada.groupby('Meio de locomocao da vitima').size().reset_index(name='Quantidade')
+        fig4 = create_colored_bar_chart(sinistros_por_veiculo, x_column='Meio de locomocao da vitima', y_column='Quantidade', title='Distribuição de Sinistros por Tipo de Veículo', color_column='Quantidade', color_scale='Oranges')
+        st.plotly_chart(fig4, use_container_width=True)
+    else:
+        st.write("Coluna 'Meio de locomocao da vitima' não encontrada nos dados.")
 
 col5, col6 = st.columns(2)
 
-# Gráfico 5: Comparação de Gênero x Horário do Sinistro 
+# Gráfico 5: Comparação de Turno x Tipo de Via
 with col5:
-    st.info("🕒 Compare a ocorrência de sinistros fatais por gênero e horário do dia.")
-    if 'Hora do Sinistro' in data_filtrada.columns and 'Sexo' in data_filtrada.columns:
-        # Converter 'Hora do Sinistro' para numérico, tratando erros
-        data_filtrada['Hora do Sinistro'] = pd.to_numeric(data_filtrada['Hora do Sinistro'], errors='coerce')
-        genero_horario = data_filtrada.groupby(['Sexo', 'Hora do Sinistro']).size().reset_index(name='Quantidade')
-        fig5 = px.line(genero_horario, x='Hora do Sinistro', y='Quantidade', color='Sexo', 
-                       title='Comparação de Gênero x Horário do Sinistro', 
-                       labels={'Quantidade':'Número de Sinistros', 'Hora do Sinistro':'Horário'},
-                       template='seaborn')
+    st.info("🚧 Compare a ocorrência de sinistros fatais por turno do dia e tipo de via.")
+    if 'Turno' in data_filtrada.columns and 'Tipo de Via' in data_filtrada.columns:
+        data_filtrada = data_filtrada[(data_filtrada['Turno'] != 'NAO DISPONIVEL') & (data_filtrada['Tipo de Via'] != 'NAO DISPONIVEL')]
+        
+        turno_tipo_via = data_filtrada.groupby(['Turno', 'Tipo de Via']).size().reset_index(name='Quantidade')
+        fig5 = px.bar(turno_tipo_via, x='Tipo de Via', y='Quantidade', color='Turno', 
+                      title='Comparação de Turno x Tipo de Via', 
+                      labels={'Quantidade':'Número de Sinistros', 'Tipo de Via':'Tipo de Via'},
+                      template='seaborn')
 
         fig5.update_layout(
             title_x=0,
             margin=dict(l=0, r=10, b=10, t=30),
-            xaxis_title='Horário do Dia',
+            xaxis_title='Tipo de Via',
             yaxis_title='Número de Sinistros',
-            legend_title_text='Gênero'
+            legend_title_text='Turno'
         )
         
         st.plotly_chart(fig5, use_container_width=True)
     else:
-        st.write("Colunas 'Hora do Sinistro' ou 'Gênero' não encontradas nos dados.")
+        st.write("Colunas 'Turno' ou 'Tipo de Via' não encontradas nos dados.")
 
 # Gráfico 6: Turno com Maior Incidência de Sinistros 
 with col6:
@@ -426,6 +443,8 @@ col7, col8 = st.columns(2)
 with col7:
     st.info("👶👵 Este gráfico exibe a distribuição de óbitos fatais de acordo com a faixa etária.")
     if 'Faixa etaria' in data_filtrada.columns:
+        data_filtrada = data_filtrada[data_filtrada['Faixa etaria'] != 'NAO DISPONIVEL']
+        
         faixa_etaria = data_filtrada.groupby('Faixa etaria').size().reset_index(name='Quantidade')
         fig7 = create_colored_bar_chart(faixa_etaria, x_column='Faixa etaria', y_column='Quantidade', title='Distribuição de Óbitos por Faixa Etária', color_column='Quantidade', color_scale='Blues')
         st.plotly_chart(fig7, use_container_width=True)
@@ -461,7 +480,7 @@ with col9:
 
 # Gráfico 9: Óbitos por Sexo 
 with col10:
-    st.info("👫 Compare o número de óbitos fatais por sexo.")
+    st.info("👫 Compare o número de óbitos fatais por gênero.")
     if 'Sexo' in data_filtrada.columns:
         obitos_por_sexo = data_filtrada.groupby('Sexo').size().reset_index(name='Quantidade')
         fig10 = create_colored_bar_chart(obitos_por_sexo, x_column='Sexo', y_column='Quantidade', title='Óbitos por Gênero', color_column='Quantidade', color_scale='Greys')
