@@ -4,46 +4,54 @@
 
 ## Visão Geral
 
-Este projeto consiste em uma aplicação interativa desenvolvida com **Streamlit** para analisar dados de óbitos em acidentes de trânsito na cidade de **Franca**, São Paulo. Através de visualizações dinâmicas e filtros intuitivos, os usuários podem explorar diversas métricas relacionadas aos acidentes, como quantidade de sinistros por ano, distribuição por dia da semana, tipo de veículo envolvido, faixa etária das vítimas, entre outros.
+Este projeto consiste em uma aplicação interativa desenvolvida com Streamlit para analisar dados de óbitos em acidentes de trânsito na cidade de Franca, São Paulo. Através de visualizações dinâmicas e filtros intuitivos, os usuários podem explorar diversas métricas relacionadas aos acidentes, como quantidade de óbitos por ano, distribuição por dia da semana, tipo de veículo envolvido, faixa etária das vítimas, entre outros.
 
-Além disso, o projeto agora conta com a integração da **API Mariaca AI**, permitindo que os usuários façam perguntas diretamente sobre os dados analisados e recebam respostas automatizadas baseadas no contexto dos dados carregados.
+Além disso, o projeto conta com a integração da API Maritaca AI, permitindo que os usuários selecionem perguntas pré-definidas sobre os dados analisados e recebam respostas automatizadas baseadas no contexto dos dados carregados.
 
-## 📊 Funcionalidades
+Também incluímos um script adicional, `gmaps.py`, que pode ser usado para converter coordenadas geográficas em informações de logradouro e bairro utilizando a API do Google Maps, com uma interface construída em Streamlit.
 
-- **Dashboard Interativo**: Visualizações gráficas interativas utilizando **Plotly Express**.
+### 📊 Funcionalidades
+
+- **Dashboard Interativo**: Visualizações gráficas interativas utilizando Plotly Express.
 - **Filtros Dinâmicos**: Filtragem de dados por ano para uma análise mais focada.
 - **Diversas Métricas**:
-  - Quantidade de sinistros por ano.
-  - Quantidade de vítimas fatais por ano.
-  - Distribuição de sinistros por dia da semana.
-  - Distribuição por tipo de veículo.
-  - Comparação de gênero x horário do sinistro.
-  - Turno com maior incidência de sinistros.
-  - Distribuição de óbitos por faixa etária.
-  - Óbitos por tipo de via.
-  - Óbitos por período do dia.
-  - Óbitos por sexo.
-  - Óbitos por mês do ano.
-  - Óbitos por dia do mês.
-- **Formulário de Contato**: Permite aos usuários enviar dúvidas ou comentários diretamente através da aplicação.
-- **Assistente de IA**: Integração com a **API Mariaca AI** para responder perguntas baseadas nos dados carregados.
+    - Quantidade de óbitos por ano.
+    - Distribuição de óbitos por tipo de sinistro.
+    - Distribuição de acidentes por dia da semana.
+    - Distribuição de acidentes por tipo de veículo.
+    - Comparação de turno x tipo de via.
+    - Turno com maior incidência de acidentes.
+    - Distribuição de óbitos por faixa etária.
+    - Óbitos por tipo de via.
+    - Top 3 bairros com mais acidentes.
+    - Óbitos por gênero.
+    - Óbitos por mês do ano.
+    - Óbitos por dia do mês.
+- **Assistente de IA**: Integração com a API Maritaca AI para responder perguntas pré-definidas baseadas nos dados carregados.
+- **Conversor de Coordenadas**: O script `gmaps.py` permite converter coordenadas de latitude e longitude em informações de logradouro e bairro usando a API do Google Maps, com interface via Streamlit.
+- **Testes Unitários**: O arquivo `test_app.py` contém testes unitários para validar as funcionalidades da aplicação principal.
+- **Download de Dados**: Os dados utilizados estão disponíveis para download em formato CSV.
+- **Contatos Úteis**: Lista de contatos importantes para segurança viária em SP.
+  
+### 🚀 Tecnologias Utilizadas
 
-## 🚀 Tecnologias Utilizadas
-
-- **Python 3.8+**
-- **Streamlit**: Para construção da interface web interativa.
-- **Pandas**: Manipulação e análise de dados.
-- **Plotly Express**: Criação de visualizações gráficas.
-- **OpenPyXL**: Leitura de arquivos Excel.
-- **Mariaca AI**: Integração de IA para responder perguntas automatizadas sobre o dataset.
+- Python 3.8+
+- Streamlit: Para construção da interface web interativa.
+- Pandas: Manipulação e análise de dados.
+- Plotly Express: Criação de visualizações gráficas.
+- Maritaca AI: Integração de IA para responder perguntas automatizadas sobre o dataset.
+- Google Maps API: Para conversão de coordenadas em logradouro e bairro.
+- OpenPyXL: Leitura de arquivos Excel.
+- Pytest: Para testes unitários.
+- dotenv: Para gerenciamento de variáveis de ambiente.
 
 ## 📥 Instalação
 
 ### 1. Clone o Repositório
 
 ```bash
-git clone https://github.com/seu-usuario/seu-repositorio.git
-cd seu-repositorio
+git clone https://github.com/gabriellmelo/analise-exploratoria-tcc.git
+cd analise-exploratoria-tcc
 ```
 
 ### 2. Crie um Ambiente Virtual (Opcional, mas Recomendado)
@@ -62,38 +70,44 @@ pip install -r requirements.txt
 > **Nota**: Se o arquivo `requirements.txt` não estiver disponível, você pode instalar as dependências manualmente:
 
 ```bash
-pip install streamlit pandas plotly openpyxl python-dotenv maritalk
+pip install streamlit pandas plotly openpyxl python-dotenv maritalk requests
 ```
 
-### 4. Configuração da API Mariaca
+### 4. Configuração das Chaves de API
 
-Crie um arquivo `.env` na raiz do projeto e adicione a sua chave da API Mariaca AI:
+Crie um arquivo `.env` na raiz do projeto e adicione as suas chaves de API:
 
 ```bash
 MARITACA_API_KEY='sua_chave_api_maritaca'
+GOOGLE_MAPS_API_KEY='sua_chave_api_google_maps'
 ```
 
 ## 🗂️ Estrutura do Projeto
 
 ```
-seu-repositorio/
+analise-exploratoria-tcc/
 ├── images/
 │   └── escudo.png
-├── filtro-franca.xlsx
+├── obitos_final.csv
 ├── app.py
+├── gmaps.py
+├── test_app.py
 ├── README.md
 ├── .env
 └── requirements.txt
 ```
 
 - **images/**: Diretório contendo imagens utilizadas na aplicação.
-- **filtro-franca.xlsx**: Arquivo Excel com os dados de óbitos em Franca.
-- **app.py**: Código fonte da aplicação Streamlit.
+- **obitos_final.csv**: Arquivo CSV com os dados de óbitos em Franca.
+- **app.py**: Código fonte da aplicação Streamlit principal.
+- **gmaps.py**: Script para conversão de coordenadas em logradouro e bairro usando a API do Google Maps com Streamlit.
+- **test_app.py**: Arquivo de testes unitários para a aplicação principal.
 - **README.md**: Este arquivo.
 - **requirements.txt**: Lista de dependências Python.
-- **.env**: Arquivo contendo a chave de API da Mariaca AI.
+- **.env**: Arquivo contendo as chaves de API necessárias.
 
 ## 🛠️ Como Executar a Aplicação
+#### Executando a Aplicação Principal
 
 Certifique-se de que todas as dependências estão instaladas conforme a seção de instalação.
 
@@ -105,19 +119,47 @@ streamlit run app.py
 
 A aplicação será iniciada e você poderá acessá-la através do navegador no endereço fornecido pelo Streamlit (geralmente [http://localhost:8501](http://localhost:8501)).
 
-## 🧠 Funcionalidades da IA
+#### Executando o Conversor de Coordenadas
+```bash
+streamlit run gmaps.py
+```
+A aplicação estará disponível no navegador, permitindo a conversão de coordenadas em logradouro e bairro.
 
-Com a integração da API Mariaca AI, você pode fazer perguntas sobre os dados carregados e receber respostas automáticas baseadas no contexto dos dados. A IA utiliza uma abordagem de contextualização dinâmica, onde a aplicação:
+### 🧪 Executando os Testes Unitários
 
-1. **Detecta o tipo de pergunta** (por exemplo, se é sobre "ano", "faixa etária" ou "dia da semana").
-2. **Gera um contexto relevante** com base nos dados filtrados, que é então enviado à API.
-3. **Recebe a resposta da IA** e a exibe diretamente na interface.
+Para rodar os testes unitários e validar as funcionalidades da aplicação principal, execute:
 
-### Exemplos de Perguntas
+```bash
+python test_app.py
+```
 
-- "Quantos óbitos ocorreram em 2020?"
-- "Qual foi o dia da semana com mais acidentes?"
-- "Quantos óbitos ocorreram por faixa etária?"
+### 🧠 Funcionalidades da IA
+
+Com a integração da API Maritaca AI, você pode obter respostas automatizadas para perguntas pré-definidas sobre os dados carregados. A aplicação fornece uma lista de perguntas selecionáveis, e ao escolher uma delas, a IA gera uma resposta baseada no contexto dos dados.
+
+#### Como Funciona
+
+1. **Seleção de Pergunta**: O usuário seleciona uma pergunta específica a partir de uma lista na barra lateral.
+2. **Geração de Contexto**: A aplicação gera um contexto relevante com base nos dados filtrados e na pergunta selecionada.
+3. **Resposta da IA**: O contexto e a pergunta são enviados à API Maritaca AI, que processa e retorna uma resposta que é exibida diretamente na interface.
+
+#### Perguntas Disponíveis
+
+- “Quantos óbitos ocorreram em 2021?”
+- “Qual a faixa etária mais afetada por acidentes?”
+- “Em qual bairro ocorreram mais óbitos?”
+- “Qual o tipo de via com mais óbitos?”
+- “Quantos óbitos ocorreram em cada dia da semana?”
+- “Qual o horário com mais óbitos?”
+- “Qual o sexo com mais acidentes?”
+- “Qual o mês com mais acidentes?”
+- “Qual o dia do mês com mais acidentes?”
+- “Qual o período do dia com mais óbitos?”
+- “Qual o meio de locomoção com mais óbitos?”
+- “Quais os tipos de acidentes mais comuns?”
+- “Qual a distribuição de óbitos por tipo de vítima (condutor, passageiro, pedestre) em [ano]?”
+
+> **Nota**: Por enquanto, não é possível inserir perguntas personalizadas. As perguntas devem ser selecionadas a partir da lista disponível.
 
 ## 📊 Fonte dos Dados
 
@@ -133,8 +175,16 @@ Este projeto está licenciado sob a Licença MIT. Veja o arquivo [LICENSE](LICEN
 
 ## 📬 Contato
 
-Para dúvidas ou sugestões, utilize o formulário de contato disponível na aplicação ou entre em contato através do email fornecido.
+- **Autor**: Gabriel Melo
+- **Email**: contato@gabrielmelo.com
+- **LinkedIn**: [linkedin.com/in/gabriellmelo](http://linkedin.com/in/gabriellmelo/)
 
 ---
+> **Nota**: Certifique-se de que todas as dependências estão instaladas e as chaves de API estão corretamente configuradas para evitar erros durante a execução.
+
+Atualização: 18/11/2024
+
+--- 
+
 
 Desenvolvido com ❤️ por Gabriel Melo (https://github.com/gabriellmelo)
