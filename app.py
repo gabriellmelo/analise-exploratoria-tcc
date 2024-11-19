@@ -13,11 +13,13 @@ Image.MAX_IMAGE_PIXELS = None
 load_dotenv()
 
 # Carregar a chave da API Maritaca
-MARITACA_API_KEY = st.secrets["MARITACA_API_KEY"]
-#MARITACA_API_KEY = os.getenv("MARITACA_API_KEY")
+MARITACA_API_KEY = st.secrets["MARITACA_API_KEY"] # Para armazenar a chave no streamlit
+#MARITACA_API_KEY = os.getenv("MARITACA_API_KEY") # Para uso local
+
 # Configuração da página
 st.set_page_config(page_title='Análise de Óbitos em Franca/SP', layout='wide', page_icon=':bar_chart:')
 
+# Função para carregar os dados
 def load_data():
     data = pd.read_csv('obitos_final.csv', delimiter=';')
     return data
@@ -33,7 +35,7 @@ def contexto_obitos_2021(data):
 def contexto_faixa_etaria_mais_afetada(data):
     faixa_etaria_mais_afetada = data['Faixa etaria'].value_counts().idxmax()
     total = data['Faixa etaria'].value_counts().max()
-    contexto = f"A faixa etária mais afetada por acidentes é {faixa_etaria_mais_afetada}, com {total} óbitos."
+    contexto = f"A faixa etária mais afetada por acidentes é entre {faixa_etaria_mais_afetada}, com {total} óbitos."
     return contexto
 
 def contexto_bairro_mais_obitos(data):
@@ -49,7 +51,7 @@ def contexto_bairro_mais_obitos(data):
 def contexto_tipo_via_mais_obitos(data):
     tipo_via_mais_obitos = data['Tipo de Via'].value_counts().idxmax()
     total = data['Tipo de Via'].value_counts().max()
-    contexto = f"O tipo de via com mais óbitos é {tipo_via_mais_obitos}, com {total} óbitos."
+    contexto = f"O tipo de via com mais óbitos são as {tipo_via_mais_obitos}, com {total} óbitos."
     return contexto
 
 def contexto_obitos_por_dia_semana(data):
@@ -74,19 +76,19 @@ def contexto_sexo_mais_acidentes(data):
 def contexto_mes_mais_acidentes(data):
     mes_mais_acidentes = data['Mes do Sinistro'].value_counts().idxmax()
     total = data['Mes do Sinistro'].value_counts().max()
-    contexto = f"O mês com mais acidentes é {mes_mais_acidentes}, com {total} acidentes."
+    contexto = f"O mês com mais acidentes é o mês {mes_mais_acidentes}, com {total} acidentes."
     return contexto
 
 def contexto_dia_mes_mais_acidentes(data):
     dia_mes_mais_acidentes = data['Dia do Sinistro'].value_counts().idxmax()
     total = data['Dia do Sinistro'].value_counts().max()
-    contexto = f"O dia do mês com mais acidentes é {dia_mes_mais_acidentes}, com {total} acidentes."
+    contexto = f"O dia do mês com mais acidentes é o dia {dia_mes_mais_acidentes}, com {total} acidentes."
     return contexto
 
 def contexto_periodo_dia_mais_obitos(data):
     periodo_mais_obitos = data['Turno'].value_counts().idxmax()
     total = data['Turno'].value_counts().max()
-    contexto = f"O período do dia com mais óbitos é {periodo_mais_obitos}, com {total} óbitos."
+    contexto = f"O período do dia com mais óbitos é o período da {periodo_mais_obitos}, com {total} óbitos."
     return contexto
 
 def contexto_meio_locomocao_mais_obitos(data):
@@ -102,24 +104,83 @@ def contexto_tipos_acidentes_mais_comuns(data):
         contexto += f"{tipo}: {total} ocorrências\n"
     return contexto
 
-def contexto_distribuicao_obitos_por_tipo_vitima(data, pergunta):
-    # Extrair o ano da pergunta
-    match = re.search(r'em (\d{4})', pergunta)
-    if match:
-        ano = int(match.group(1))
-        data_ano = data[data['Ano'] == ano]
-        distribuicao = data_ano['Tipo de vitima'].value_counts().to_dict()
-        contexto = f"Distribuição de óbitos por tipo de vítima em {ano}:\n"
-        for tipo, total in distribuicao.items():
-            contexto += f"{tipo}: {total} óbitos\n"
-    else:
-        contexto = "Por favor, especifique o ano para a análise."
+def contexto_comparativo_obitos_por_mes(data):
+    obitos_por_mes_ano = data.groupby(['Mes do Sinistro', 'Ano']).size().unstack().T.fillna(0)
+    
+    picos_obitos = {}
+    for mes, anos in obitos_por_mes_ano.iterrows():
+        mes_max = anos.idxmax()  
+        picos_obitos[mes] = f"{mes_max} - {int(anos[mes_max])} óbitos"
+    
+    contexto = "Meses com os maiores picos de óbitos por ano:\n"
+    for mes, resultado in picos_obitos.items():
+        contexto += f"{mes}: {resultado}\n"
+    
     return contexto
 
-# Dicionário de mapeamento de perguntas para funções
-def contexto_default(data):
-    return "Desculpe, não tenho informações para responder a essa pergunta."
+def contexto_media_obitos_por_bairro(data):
+    obitos_por_bairro = data.groupby('Bairro').size()
+    media_obitos = round(obitos_por_bairro.mean())
+    contexto = f"A média de óbitos por bairro é de {media_obitos} óbitos por bairro."
+    return contexto
 
+def contexto_proporcao_obitos_por_tipo_vitima(data):
+    tipos_vitima = data['Tipo de vitima'].value_counts(normalize=True) * 100
+    contexto = "Proporção de óbitos por tipo de vítima (em %):\n"
+    for tipo, proporcao in tipos_vitima.items():
+        contexto += f"{tipo}: {proporcao:.2f}%\n"
+    return contexto
+
+def contexto_idade_media_vitimas(data):
+    idade_media = round(data['Idade da vitima'].mean())
+    contexto = f"A idade média das vítimas de acidentes de trânsito é de {idade_media} anos."
+    return contexto
+
+def contexto_comparativo_dezembro_janeiro(data):
+    meses_comparados = data[data['Mes do Sinistro'].isin([12, 1])]
+    obitos_dezembro_janeiro = meses_comparados.groupby(['Ano', 'Mes do Sinistro']).size().unstack(fill_value=0)
+    if obitos_dezembro_janeiro.empty:
+        return "Não há dados suficientes para comparar os óbitos entre dezembro e janeiro nos anos de 2019 a 2023."
+    
+    contexto = "Comparativo de óbitos entre dezembro e janeiro (2019-2023):\n"
+    resumo = [] 
+    for ano, meses in obitos_dezembro_janeiro.iterrows():
+        dezembro = meses[12]
+        janeiro = meses[1]
+        delta = janeiro - dezembro
+        contexto += f"Ano: {ano} - Dezembro: {dezembro} óbitos, Janeiro: {janeiro} óbitos - Diferença: {delta} óbitos\n"
+        resumo.append(f"{ano}: {delta} óbitos")
+
+    insight = """
+    Embora os meses de dezembro e janeiro sejam frequentemente associados a festividades e férias, os dados indicam uma variação nos óbitos ao longo dos anos. 
+    Nos últimos dois anos (2022 e 2023), houve uma leve redução, embora não muito expressiva. Em contraste, 2020 e 2021 registraram um aumento no número de óbitos. 
+    Esse padrão sugere uma tendência de estabilização nas ocorrências de óbitos durante esse período, com uma diminuição gradual ao longo dos últimos anos, apesar das 
+    festividades típicas desse período.
+    """
+    resumo_sucinto = f"\nResumo: {', '.join(resumo)}"
+    return contexto + insight + resumo_sucinto
+
+def obter_resposta_maritaca_ai(pergunta, data):
+    # Gerar o contexto com base na pergunta
+    contexto = pergunta_para_funcao.get(pergunta)(data)
+    # Preparar o prompt para a Maritaca AI
+    prompt = f"{contexto}\n\nCom base nas informações acima, responda à seguinte pergunta:\n{pergunta}\nResposta:"
+
+    # Fazer a chamada para a Maritaca AI
+    try:
+        # Configurar o modelo Maritaca AI
+        model = maritalk.MariTalk(
+            key=MARITACA_API_KEY,
+            model="sabia-3"
+        )
+
+        response = model.generate(prompt, max_tokens=500)
+        answer = response["answer"]
+
+        return answer
+    except Exception as e:
+        return f"Erro ao conectar com a API: {e}"
+    
 pergunta_para_funcao = {
     "Quantos óbitos ocorreram em 2021?": contexto_obitos_2021,
     "Qual a faixa etária mais afetada por acidentes?": contexto_faixa_etaria_mais_afetada,
@@ -133,38 +194,14 @@ pergunta_para_funcao = {
     "Qual o período do dia com mais óbitos?": contexto_periodo_dia_mais_obitos,
     "Qual o meio de locomoção com mais óbitos?": contexto_meio_locomocao_mais_obitos,
     "Quais os tipos de acidentes mais comuns?": contexto_tipos_acidentes_mais_comuns,
-    "Qual a distribuição de óbitos por tipo de vítima (condutor, passageiro, pedestre) em [ano]?": contexto_distribuicao_obitos_por_tipo_vitima,
+    "Em quais meses ocorrem mais óbitos em comparação com outros anos?": contexto_comparativo_obitos_por_mes,
+    "Qual a média de óbitos por bairro?": contexto_media_obitos_por_bairro,
+    "Qual a proporção de óbitos por tipo de vítima (condutor, passageiro, pedestre)?": contexto_proporcao_obitos_por_tipo_vitima,
+    "Qual a idade média das vítimas de acidentes de trânsito?": contexto_idade_media_vitimas,
+    "Como foi o comparativo de óbitos entre dezembro e janeiro nos anos de 2019 a 2023?": contexto_comparativo_dezembro_janeiro
 }
 
-# Função para obter resposta da Maritaca AI com o contexto gerado
-def obter_resposta_maritaca_ai(pergunta, data):
-    time.sleep(2)
-    try:
-        if pergunta in pergunta_para_funcao:
-            funcao_contexto = pergunta_para_funcao[pergunta]
-            if pergunta == "Qual a distribuição de óbitos por tipo de vítima (condutor, passageiro, pedestre) em [ano]?":
-                contexto = funcao_contexto(data, pergunta)
-            else:
-                contexto = funcao_contexto(data)
-        else:
-            contexto = "Desculpe, não tenho informações para responder a essa pergunta."
-        
-        prompt = f"Contexto:\n{contexto}\n\nPergunta: {pergunta}\nResposta:"
-        
-        # Configurar o modelo Maritaca AI
-        model = maritalk.MariTalk(
-            key=MARITACA_API_KEY,
-            model="sabia-3"
-        )
-        
-        response = model.generate(prompt, max_tokens=500)
-        answer = response["answer"]
-        
-        return answer
-    except Exception as e:
-        return f"Erro ao conectar com a API: {e}"
-
-# Sidebar content
+# Sidebar 
 st.sidebar.header("Informações Importantes")
 with st.sidebar.expander("O que você precisa saber sobre os dados disponíveis para esta análise."):
     st.write(
@@ -238,8 +275,10 @@ pergunta_selecionada = st.sidebar.selectbox(
     [
         "Selecione uma pergunta...",  
         "Quantos óbitos ocorreram em 2021?",
+        "Como foi o comparativo de óbitos entre dezembro e janeiro nos anos de 2019 a 2023?",
         "Qual a faixa etária mais afetada por acidentes?",
         "Em qual bairro ocorreram mais óbitos?",
+        "Qual a proporção de óbitos por tipo de vítima (condutor, passageiro, pedestre)?",
         "Qual o tipo de via com mais óbitos?",
         "Quantos óbitos ocorreram em cada dia da semana?",
         "Qual o horário com mais óbitos?",
@@ -249,7 +288,9 @@ pergunta_selecionada = st.sidebar.selectbox(
         "Qual o período do dia com mais óbitos?",
         "Qual o meio de locomoção com mais óbitos?",
         "Quais os tipos de acidentes mais comuns?",
-        "Qual a distribuição de óbitos por tipo de vítima (condutor, passageiro, pedestre) em [ano]?"
+        "Em quais meses ocorrem mais óbitos em comparação com outros anos?", 
+        "Qual a média de óbitos por bairro?",  
+        "Qual a idade média das vítimas de acidentes de trânsito?", 
     ]
 )
 
@@ -258,7 +299,7 @@ if st.sidebar.button("Enviar"):
         placeholder = st.empty()
         placeholder.write("Aguarde, processando a resposta...") 
         if pergunta_selecionada:
-            resposta_ia = obter_resposta_maritaca_ai(pergunta_selecionada, data)
+            resposta_ia = obter_resposta_maritaca_ai(pergunta_selecionada, data_filtrada)
             placeholder.empty() 
             st.write("**Resposta da IA:**")
             st.write(resposta_ia)
@@ -266,15 +307,11 @@ if st.sidebar.button("Enviar"):
             placeholder.empty() 
             st.write("Por favor, selecione uma pergunta.")
 
-# Layout com colunas
-col1, col2 = st.columns([0.1, 0.9])  
+
+col1, col2 = st.columns([0.15, 0.80])  
 
 with col1:
-    # Exibe o escudo na primeira coluna com margem superior
-    st.image('images/escudo.png', width=130, use_column_width=False)
-    st.markdown("<style>img { margin-top: 70px; }</style>", unsafe_allow_html=True)  # Ajusta a margem superior
-
-    
+    st.image('images/escudo.png', use_column_width=True)     
 with col2:
     st.title("*Estatísticas de Óbitos em Acidentes de Trânsito em Franca*", help="Dados de 2019 a 2023")
     st.markdown(":bar_chart: **Fonte dos Dados Brutos**: [Infosiga SP](https://www.infosiga.sp.gov.br/?name=identificacao4&contextId=8a80809939587c0901395881fc2b0004)")
@@ -295,7 +332,6 @@ st.markdown("O projeto está alinhado com os [Objetivos de Desenvolvimento Suste
 # Insights Section
 st.subheader(":bar_chart: Visão Comparativa dos Óbitos por Acidente de Trânsito")
 
-# Dividindo em 3 colunas
 col1, col2, col3 = st.columns(3)
 
 # Contagem total de óbitos
@@ -316,17 +352,17 @@ else:
         st.metric(":coffin: Total de Óbitos", total_obitos)
         st.markdown("<div style='color:orange; font-size: 14px; margin-top: -15px;'>Sem comparação</div>", unsafe_allow_html=True)
 
-# Óbitos por Veículos Motorizados
-veiculos_motorizados = data_filtrada[data_filtrada['Meio de locomocao da vitima'].isin(['MOTOCICLETA', 'AUTOMOVEL', 'CAMINHAO'])]
-total_veiculos_motorizados = len(veiculos_motorizados)
+# Óbitos por Motoristas e Condutores
+motoristas_condutores = data_filtrada[data_filtrada['Tipo de vitima'].isin(['CONDUTOR', 'PASSAGEIRO'])]
+total_motoristas_condutores = len(motoristas_condutores)
 
 if ano_anterior is not None and not dados_ano_anterior.empty:
-    veiculos_motorizados_anterior = dados_ano_anterior[dados_ano_anterior['Meio de locomocao da vitima'].isin(['MOTOCICLETA', 'AUTOMOVEL', 'CAMINHAO'])]
-    delta_veiculos_motorizados = total_veiculos_motorizados - len(veiculos_motorizados_anterior)
-    col2.metric(":car: Óbitos por Veículos Motorizados", total_veiculos_motorizados, delta=f"{delta_veiculos_motorizados} comparado ao ano anterior", help="Óbitos envolvendo veículos motorizados")
+    motoristas_condutores_anterior = dados_ano_anterior[dados_ano_anterior['Tipo de vitima'].isin(['CONDUTOR', 'PASSAGEIRO'])]
+    delta_motoristas_condutores = total_motoristas_condutores - len(motoristas_condutores_anterior)
+    col2.metric(":car: Óbitos por Motoristas e Condutores", total_motoristas_condutores, delta=f"{delta_motoristas_condutores} comparado ao ano anterior", help="Óbitos envolvendo motoristas e condutores")
 else:
     with col2:
-        st.metric(":car: Óbitos por Veículos Motorizados", total_veiculos_motorizados)
+        st.metric(":car: Óbitos por Motoristas e Condutores", total_motoristas_condutores)
         st.markdown("<div style='color:orange; font-size: 14px; margin-top: -15px;'>Sem comparação</div>", unsafe_allow_html=True)
 
 # Óbitos de Pedestres
@@ -342,7 +378,7 @@ else:
         st.metric(":walking: Óbitos de Pedestres", total_pedestres)
         st.markdown("<div style='color:orange; font-size: 14px; margin-top: -15px;'>Sem comparação</div>", unsafe_allow_html=True)
 
-# Função para criar gráfico de barras com cores
+# Função para criar gráfico de barras com cores gradientes
 def create_colored_bar_chart(data, x_column, y_column, title, color_column, color_scale):
     fig = px.bar(data, x=x_column, y=y_column, color=color_column, template='seaborn', color_continuous_scale=color_scale)
     fig.update_layout(
@@ -524,6 +560,7 @@ with col12:
         st.plotly_chart(fig12, use_container_width=True)
     else:
         st.write("Coluna 'Dia do Sinistro' não encontrada nos dados.")
+
 # Lista de Contatos Úteis
 with st.expander("Contatos Úteis"):
     st.markdown("""
