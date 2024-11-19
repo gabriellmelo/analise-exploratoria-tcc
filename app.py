@@ -7,7 +7,7 @@ import maritalk
 import os
 from dotenv import load_dotenv
 from PIL import Image
-Image.MAX_IMAGE_PIXELS = None  # Isso desativa a proteção contra "Decompression Bomb"
+Image.MAX_IMAGE_PIXELS = None  
 
 # Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
@@ -19,7 +19,7 @@ MARITACA_API_KEY = st.secrets["MARITACA_API_KEY"]
 st.set_page_config(page_title='Análise de Óbitos em Franca/SP', layout='wide', page_icon=':bar_chart:')
 
 def load_data():
-    data = pd.read_csv('obitos_final_nov.csv', delimiter=';')
+    data = pd.read_csv('obitos_final.csv', delimiter=';')
     return data
 
 data = load_data()
@@ -170,7 +170,8 @@ with st.sidebar.expander("O que você precisa saber sobre os dados disponíveis 
     st.write(
         """
         Foram registrados **205 óbitos** no período de 2019 a 2023. Durante a análise, foram identificadas as seguintes lacunas nos dados:
-        - **31 bairros não identificados**.
+        - **29 bairros não identificados**.
+        - **11 logradouros não disponíveis**.
         - **9 óbitos** sem a informação sobre a **idade da vítima**.
         - **12 registros** sem informações sobre o **tipo de acidente** (atropelamento, choque, tombamento, etc.).
         - **6 casos** onde o **tipo de vítima** não foi informado (pedestre, motorista, etc.).
@@ -179,9 +180,13 @@ with st.sidebar.expander("O que você precisa saber sobre os dados disponíveis 
         - **11 registros** com o **logradouro** não identificado.
         - **28 registros** sem informações sobre o **turno** do acidente.
         
-        **Importante:** A ausência de informações em várias colunas pode comprometer a precisão e a profundidade das análises realizadas.
+        **Importante:** A ausência de informações em várias colunas pode comprometer a precisão das análises realizadas.
         
         Caso tenha dúvidas sobre a origem dos dados ou sobre o processo de tratamento e limpeza das informações, estamos à disposição para fornecer esclarecimentos detalhados.
+        
+        Para mais informações, entre em contato conosco através dos seguintes e-mails:
+        - contato@gabrielmelo.com
+        - gabrielfreitas034@gmail.com
         """
     )
 st.sidebar.markdown("---") 
@@ -223,7 +228,7 @@ csv = convert_df(data_filtrada)
 st.sidebar.download_button(
     label="Dados disponíveis para download em CSV",
     data=csv,
-    file_name="obitos_final_nov.csv",
+    file_name="obitos_final.csv",
     mime="text/csv",
 )    
 
@@ -261,83 +266,83 @@ if st.sidebar.button("Enviar"):
             placeholder.empty() 
             st.write("Por favor, selecione uma pergunta.")
 
-col1, col2 = st.columns([0.2, 0.8])  
+# Layout com colunas
+col1, col2 = st.columns([0.1, 0.9])  
+
 with col1:
-    st.image('images/escudo.png', width=100)  
+    # Exibe o escudo na primeira coluna com margem superior
+    st.image('images/escudo.png', width=130, use_column_width=False)
+    st.markdown("<style>img { margin-top: 70px; }</style>", unsafe_allow_html=True)  # Ajusta a margem superior
+
+    
 with col2:
-    st.title("Análise de Óbitos em Acidentes de Trânsito na Cidade de Franca/SP")
-    st.markdown("Fonte dos Dados Brutos: [Infosiga SP](https://www.infosiga.sp.gov.br/?name=identificacao4&contextId=8a80809939587c0901395881fc2b0004)")
-    st.markdown("Código Fonte: [GitHub](https://github.com/gabriellmelo/analise-exploratoria-tcc)")
-    st.markdown("Data de Atualização: 30/09/2024")
+    st.title("*Estatísticas de Óbitos em Acidentes de Trânsito em Franca*", help="Dados de 2019 a 2023")
+    st.markdown(":bar_chart: **Fonte dos Dados Brutos**: [Infosiga SP](https://www.infosiga.sp.gov.br/?name=identificacao4&contextId=8a80809939587c0901395881fc2b0004)")
+    st.markdown(":computer: **Código Fonte**: [GitHub](https://github.com/gabriellmelo/analise-exploratoria-tcc)")
+    st.markdown(":calendar: **Data de Atualização**: 18/11/2024")
+    
     st.markdown("---")
 
 # Seção de Objetivo
 st.markdown("""
-<div style='padding: 15px; border-radius: 10px;'>
-    <p style='font-size: 16px;'>
-        Esta aplicação tem como objetivo <b>analisar os dados de óbitos</b> decorrentes de acidentes de trânsito na cidade de Franca nos últimos 5 anos, 
-        utilizando técnicas de análise de dados para:
-    </p>
-    <ul style='font-size: 16px; line-height: 1.6;'>
-        <li>Identificar padrões e tendências que possam apoiar a formulação de <b>medidas preventivas</b>;</li>
-        <li>Contribuir para a <b>melhoria da segurança viária</b>;</li>
-        <li>Democratizar o acesso a informações, facilitando o entendimento por <b>cidadãos</b> e <b>autoridades locais</b>.</li>
-    </ul>
-    <p style='font-size: 16px;'>
-        O projeto está alinhado com os <a href='https://brasil.un.org/pt-br/sdgs' target='_blank'>Objetivos de Desenvolvimento Sustentável (ODS)</a> da ONU, 
-        em especial o <a href='https://www.ipea.gov.br/ods/ods11.html' target='_blank'>Objetivo 11</a> - Cidades e Comunidades Sustentáveis.
-    </p>
-</div>
-""", unsafe_allow_html=True)
+    Esta aplicação tem como objetivo **:blue-background[analisar os dados de óbitos]** decorrentes de acidentes de trânsito na cidade de Franca nos últimos 5 anos, utilizando técnicas de análise de dados para:
+    - **:blue-background[Identificar padrões e tendências]** que possam apoiar a formulação de **:blue-background[medidas preventivas]**;
+    - **Contribuir para a melhoria da :blue-background[segurança viária]**;
+    - **:blue-background[Democratizar o acesso a informações]**, facilitando o entendimento por **:blue-background[cidadãos]** e **:blue-background[autoridades locais]**.
+""")
+st.markdown("O projeto está alinhado com os [Objetivos de Desenvolvimento Sustentável (ODS)](https://brasil.un.org/pt-br/sdgs) da ONU, em especial o [Objetivo 11](https://www.ipea.gov.br/ods/ods11.html) - Cidades e Comunidades Sustentáveis.")
 
+# Insights Section
+st.subheader(":bar_chart: Visão Comparativa dos Óbitos por Acidente de Trânsito")
 
-# Métricas no topo
-st.subheader("Insights")
+# Dividindo em 3 colunas
 col1, col2, col3 = st.columns(3)
 
-# Total de óbitos
+# Contagem total de óbitos
 total_obitos = len(data_filtrada)
 
 # Exibir os dados brutos se o checkbox for marcado
 if exibir_dados_brutos:
-    st.subheader("Dados Brutos")
+    st.subheader(":clipboard: Dados Brutos")
     st.write(data_filtrada)
 
+# Comparando com o ano anterior
 if ano_anterior is not None and not dados_ano_anterior.empty:
     total_obitos_anterior = len(dados_ano_anterior)
     delta_obitos = total_obitos - total_obitos_anterior
-    col1.metric("Total de Óbitos", total_obitos, delta=f"{delta_obitos} comparado ao ano anterior")
+    col1.metric(":coffin: Total de Óbitos", total_obitos, delta=f"{delta_obitos} comparado ao ano anterior", help="Total de óbitos")
 else:
     with col1:
-        st.metric("Total de Óbitos", total_obitos)
+        st.metric(":coffin: Total de Óbitos", total_obitos)
         st.markdown("<div style='color:orange; font-size: 14px; margin-top: -15px;'>Sem comparação</div>", unsafe_allow_html=True)
 
 # Óbitos por Veículos Motorizados
 veiculos_motorizados = data_filtrada[data_filtrada['Meio de locomocao da vitima'].isin(['MOTOCICLETA', 'AUTOMOVEL', 'CAMINHAO'])]
-total_veiculos_motorizados = len(veiculos_motorizados)  
+total_veiculos_motorizados = len(veiculos_motorizados)
 
 if ano_anterior is not None and not dados_ano_anterior.empty:
     veiculos_motorizados_anterior = dados_ano_anterior[dados_ano_anterior['Meio de locomocao da vitima'].isin(['MOTOCICLETA', 'AUTOMOVEL', 'CAMINHAO'])]
     delta_veiculos_motorizados = total_veiculos_motorizados - len(veiculos_motorizados_anterior)
-    col2.metric("Óbitos por Veículos Motorizados", total_veiculos_motorizados, delta=f"{delta_veiculos_motorizados} comparado ao ano anterior")
+    col2.metric(":car: Óbitos por Veículos Motorizados", total_veiculos_motorizados, delta=f"{delta_veiculos_motorizados} comparado ao ano anterior", help="Óbitos envolvendo veículos motorizados")
 else:
     with col2:
-        st.metric("Óbitos por Veículos Motorizados", total_veiculos_motorizados)  # Passar total de veículos motorizados
+        st.metric(":car: Óbitos por Veículos Motorizados", total_veiculos_motorizados)
         st.markdown("<div style='color:orange; font-size: 14px; margin-top: -15px;'>Sem comparação</div>", unsafe_allow_html=True)
 
-# Óbitos de pedestres
+# Óbitos de Pedestres
 pedestres = data_filtrada[data_filtrada['Meio de locomocao da vitima'] == 'PEDESTRE']
-total_pedestres = len(pedestres)  
+total_pedestres = len(pedestres)
 
 if ano_anterior is not None and not dados_ano_anterior.empty:
     pedestres_anterior = dados_ano_anterior[dados_ano_anterior['Meio de locomocao da vitima'] == 'PEDESTRE']
     delta_pedestres = total_pedestres - len(pedestres_anterior)
-    col3.metric("Óbitos de Pedestres", total_pedestres, delta=f"{delta_pedestres} comparado ao ano anterior")
+    col3.metric(":walking: Óbitos de Pedestres", total_pedestres, delta=f"{delta_pedestres} comparado ao ano anterior", help="Óbitos envolvendo pedestres em acidentes")
 else:
     with col3:
-        st.metric("Óbitos de Pedestres", total_pedestres)  # Passar total de pedestres
+        st.metric(":walking: Óbitos de Pedestres", total_pedestres)
         st.markdown("<div style='color:orange; font-size: 14px; margin-top: -15px;'>Sem comparação</div>", unsafe_allow_html=True)
 
+# Função para criar gráfico de barras com cores
 def create_colored_bar_chart(data, x_column, y_column, title, color_column, color_scale):
     fig = px.bar(data, x=x_column, y=y_column, color=color_column, template='seaborn', color_continuous_scale=color_scale)
     fig.update_layout(
@@ -351,39 +356,37 @@ def create_colored_bar_chart(data, x_column, y_column, title, color_column, colo
     return fig
 
 col1, col2 = st.columns(2)
-# Gráfico 1: Quantidade de Sinistros por Ano 
+# Gráfico 1: Quantidade de Acidentes por Ano 
 with col1:
-    st.info("📊 Este gráfico mostra a quantidade de sinistros ao longo dos anos.")
+    st.info("📊 Este gráfico mostra a quantidade de acidentes ao longo dos anos.")
     sinistros_por_ano = data_filtrada.groupby('Ano').size().reset_index(name='Quantidade')
-    fig1 = create_colored_bar_chart(sinistros_por_ano, x_column='Ano', y_column='Quantidade', title='Quantidade de Sinistros por Ano', color_column='Quantidade', color_scale='Blues')
+    fig1 = create_colored_bar_chart(sinistros_por_ano, x_column='Ano', y_column='Quantidade', title='Quantidade de Acidentes por Ano', color_column='Quantidade', color_scale='Blues')
     st.plotly_chart(fig1, use_container_width=True)
 
 # Gráfico 2: Distribuição de Óbitos por Tipo de Sinistro
 with col2:
-    st.info("🚧 Este gráfico exibe a distribuição de óbitos por tipo de sinistro.")
+    st.info("🚧 Este gráfico exibe a distribuição de óbitos por tipo de acidente.")
     obitos_por_tipo_sinistro = data_filtrada['Tipo de Sinistro'].value_counts().reset_index(name='Quantidade')
     obitos_por_tipo_sinistro = obitos_por_tipo_sinistro.rename(columns={'index': 'Tipo de Sinistro'})
-    fig2 = create_colored_bar_chart(obitos_por_tipo_sinistro, x_column='Tipo de Sinistro', y_column='Quantidade', title='Distribuição de Óbitos por Tipo de Sinistro', color_column='Quantidade', color_scale='Reds')
+    fig2 = create_colored_bar_chart(obitos_por_tipo_sinistro, x_column='Tipo de Sinistro', y_column='Quantidade', title='Distribuição de Óbitos por Tipo de Acidente', color_column='Quantidade', color_scale='Reds')
     st.plotly_chart(fig2, use_container_width=True)
 
 col3, col4 = st.columns(2)
 
-# Gráfico 3: Distribuição de Sinistros por Dia da Semana 
+# Gráfico 3: Distribuição de Acidentes por Dia da Semana 
 with col3:
-    st.info("📅 Este gráfico mostra a distribuição dos sinistros fatais em diferentes dias da semana.")
+    st.info("📅 Este gráfico mostra a distribuição dos acidentes fatais em diferentes dias da semana.")
     sinistros_por_dia_semana = data_filtrada.groupby('Dia da Semana').size().reset_index(name='Quantidade')
-    fig3 = create_colored_bar_chart(sinistros_por_dia_semana, x_column='Dia da Semana', y_column='Quantidade', title='Distribuição de Sinistros por Dia da Semana', color_column='Quantidade', color_scale='Greens')
+    fig3 = create_colored_bar_chart(sinistros_por_dia_semana, x_column='Dia da Semana', y_column='Quantidade', title='Distribuição de Acidentes por Dia da Semana', color_column='Quantidade', color_scale='Greens')
     st.plotly_chart(fig3, use_container_width=True)
 
-# Gráfico 4: Distribuição de Sinistros por Tipo de Veículo 
+# Gráfico 4: Distribuição de Acidentes por Tipo de Veículo 
 with col4:
-    st.info("🚗 Este gráfico apresenta os tipos de veículos mais envolvidos em sinistros fatais.")
+    st.info("🚗 Este gráfico apresenta os tipos de veículos mais envolvidos em acidentes fatais.")
     if 'Meio de locomocao da vitima' in data_filtrada.columns:
-        # Remover dados "NAO DISPONIVEL"
         data_filtrada = data_filtrada[data_filtrada['Meio de locomocao da vitima'] != 'NAO DISPONIVEL']
-        
         sinistros_por_veiculo = data_filtrada.groupby('Meio de locomocao da vitima').size().reset_index(name='Quantidade')
-        fig4 = create_colored_bar_chart(sinistros_por_veiculo, x_column='Meio de locomocao da vitima', y_column='Quantidade', title='Distribuição de Sinistros por Tipo de Veículo', color_column='Quantidade', color_scale='Oranges')
+        fig4 = create_colored_bar_chart(sinistros_por_veiculo, x_column='Meio de locomocao da vitima', y_column='Quantidade', title='Distribuição de Acidentes por Tipo de Veículo', color_column='Quantidade', color_scale='Oranges')
         st.plotly_chart(fig4, use_container_width=True)
     else:
         st.write("Coluna 'Meio de locomocao da vitima' não encontrada nos dados.")
@@ -392,21 +395,21 @@ col5, col6 = st.columns(2)
 
 # Gráfico 5: Comparação de Turno x Tipo de Via
 with col5:
-    st.info("🚧 Compare a ocorrência de sinistros fatais por turno do dia e tipo de via.")
+    st.info("🚧 Compare a ocorrência de acidentes fatais por turno do dia e tipo de via.")
     if 'Turno' in data_filtrada.columns and 'Tipo de Via' in data_filtrada.columns:
         data_filtrada = data_filtrada[(data_filtrada['Turno'] != 'NAO DISPONIVEL') & (data_filtrada['Tipo de Via'] != 'NAO DISPONIVEL')]
         
         turno_tipo_via = data_filtrada.groupby(['Turno', 'Tipo de Via']).size().reset_index(name='Quantidade')
         fig5 = px.bar(turno_tipo_via, x='Tipo de Via', y='Quantidade', color='Turno', 
                       title='Comparação de Turno x Tipo de Via', 
-                      labels={'Quantidade':'Número de Sinistros', 'Tipo de Via':'Tipo de Via'},
+                      labels={'Quantidade':'Número de Acidentes', 'Tipo de Via':'Tipo de Via'},
                       template='seaborn')
 
         fig5.update_layout(
             title_x=0,
             margin=dict(l=0, r=10, b=10, t=30),
             xaxis_title='Tipo de Via',
-            yaxis_title='Número de Sinistros',
+            yaxis_title='Número de Acidentes',
             legend_title_text='Turno'
         )
         
@@ -414,9 +417,9 @@ with col5:
     else:
         st.write("Colunas 'Turno' ou 'Tipo de Via' não encontradas nos dados.")
 
-# Gráfico 6: Turno com Maior Incidência de Sinistros 
+# Gráfico 6: Turno com Maior Incidência de Acidentes 
 with col6:
-    st.info("⏳ Veja em quais turnos do dia ocorrem mais sinistros fatais.")
+    st.info("⏳ Veja em quais turnos do dia ocorrem mais acidentes fatais.")
     def classificar_turno(hora):
         if pd.isna(hora):
             return 'Desconhecido'
@@ -432,7 +435,7 @@ with col6:
     if 'Hora do Sinistro' in data_filtrada.columns:
         data_filtrada['Turno'] = data_filtrada['Hora do Sinistro'].apply(classificar_turno)
         sinistros_por_turno = data_filtrada.groupby('Turno').size().reset_index(name='Quantidade')
-        fig6 = create_colored_bar_chart(sinistros_por_turno, x_column='Turno', y_column='Quantidade', title='Turno com Maior Incidência de Sinistros', color_column='Quantidade', color_scale='YlOrBr')
+        fig6 = create_colored_bar_chart(sinistros_por_turno, x_column='Turno', y_column='Quantidade', title='Turno com Maior Incidência de Acidentes', color_column='Quantidade', color_scale='YlOrBr')
         st.plotly_chart(fig6, use_container_width=True)
     else:
         st.write("Coluna 'Hora do Sinistro' não encontrada nos dados.")
@@ -441,7 +444,7 @@ col7, col8 = st.columns(2)
 
 # Gráfico 7: Distribuição de Óbitos por Faixa Etária 
 with col7:
-    st.info("👶👵 Este gráfico exibe a distribuição de óbitos fatais de acordo com a faixa etária.")
+    st.info("👶👵 Este gráfico exibe a distribuição de acidentes fatais de acordo com a faixa etária.")
     if 'Faixa etaria' in data_filtrada.columns:
         data_filtrada = data_filtrada[data_filtrada['Faixa etaria'] != 'NAO DISPONIVEL']
         
@@ -453,7 +456,7 @@ with col7:
 
 # Gráfico 8: Óbitos por Tipo de Via 
 with col8:
-    st.info("🚧 Visualize os tipos de vias mais associados a óbitos fatais.")
+    st.info("🚧 Visualize os tipos de vias mais associados a acidentes fatais.")
     if 'Tipo de Via' in data_filtrada.columns:
         tipo_via = data_filtrada.groupby('Tipo de Via').size().reset_index(name='Quantidade')
         fig8 = create_colored_bar_chart(tipo_via, x_column='Tipo de Via', y_column='Quantidade', title='Óbitos por Tipo de Via', color_column='Quantidade', color_scale='Reds')
@@ -463,7 +466,7 @@ with col8:
 
 col9, col10 = st.columns(2)
 
-# Adicionar gráfico de barras para os 3 bairros com maiores índices de acidentes
+# 3 bairros com maiores índices de acidentes
 with col9:
     st.info("🏘️ Este gráfico exibe os 3 bairros com maiores índices de acidentes.")
     if 'Bairro' in data_filtrada.columns:
@@ -472,15 +475,21 @@ with col9:
         top3_bairros = top3_bairros[top3_bairros['Bairro'] != 'Bairro não identificado'].head(3)
         if not top3_bairros.empty:
             fig_top3 = create_colored_bar_chart(top3_bairros, x_column='Bairro', y_column='Quantidade', title='Top 3 Bairros com Mais Acidentes', color_column='Quantidade', color_scale='Oranges')
+            fig_top3.update_layout(
+                yaxis=dict(
+                    tickmode='linear',
+                    dtick=1 
+                )
+            )
             st.plotly_chart(fig_top3, use_container_width=True)
         else:
             st.write("Nenhum dado disponível para os bairros.")
     else:
         st.write("Coluna 'Bairro' não encontrada nos dados.")
 
-# Gráfico 9: Óbitos por Sexo 
+# Gráfico 9: Óbitos por Gênero 
 with col10:
-    st.info("👫 Compare o número de óbitos fatais por gênero.")
+    st.info("👫 Compare o número de óbitos por gênero.")
     if 'Sexo' in data_filtrada.columns:
         obitos_por_sexo = data_filtrada.groupby('Sexo').size().reset_index(name='Quantidade')
         fig10 = create_colored_bar_chart(obitos_por_sexo, x_column='Sexo', y_column='Quantidade', title='Óbitos por Gênero', color_column='Quantidade', color_scale='Greys')
@@ -492,7 +501,7 @@ col11, col12 = st.columns(2)
 
 # Gráfico 11: Óbitos por Mês do Ano
 with col11:
-    st.info("📅 Este gráfico mostra a distribuição de óbitos fatais ao longo dos meses do ano.")
+    st.info("📅 Este gráfico mostra a distribuição de óbitos ao longo dos meses do ano.")
     if 'Mes do Sinistro' in data_filtrada.columns:
         mes_do_ano = data_filtrada.groupby('Mes do Sinistro').size().reset_index(name='Quantidade')
         fig11 = create_colored_bar_chart(mes_do_ano, x_column='Mes do Sinistro', y_column='Quantidade', title='Acidentes por Mês do Ano', color_column='Quantidade', color_scale='BuGn')
@@ -502,14 +511,19 @@ with col11:
 
 # Gráfico 12: Óbitos por Dia do Mês
 with col12:
-    st.info("📆 Veja como os óbitos fatais se distribuem ao longo dos dias de cada mês.")
+    st.info("📆 Veja como os óbitos se distribuem ao longo dos dias de cada mês.")
     if 'Dia do Sinistro' in data_filtrada.columns:
         dia_do_mes = data_filtrada.groupby('Dia do Sinistro').size().reset_index(name='Quantidade')
         fig12 = create_colored_bar_chart(dia_do_mes, x_column='Dia do Sinistro', y_column='Quantidade', title='Acidentes por Dia do Mês', color_column='Quantidade', color_scale='YlGnBu')
+        fig12.update_layout(
+            yaxis=dict(
+                tickmode='linear',
+                dtick=1  
+            )
+        )
         st.plotly_chart(fig12, use_container_width=True)
     else:
         st.write("Coluna 'Dia do Sinistro' não encontrada nos dados.")
-
 # Lista de Contatos Úteis
 with st.expander("Contatos Úteis"):
     st.markdown("""
