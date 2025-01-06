@@ -2,6 +2,8 @@
 
 ![Escudo de Franca](images/escudo.png)
 
+👉 **Acesse o dashboard interativo por este link:** [eda-acidentes-franca.streamlit.app](https://eda-acidentes-franca.streamlit.app)
+
 ## Visão Geral
 
 Este projeto consiste em uma aplicação interativa desenvolvida com Streamlit para analisar dados de óbitos em acidentes de trânsito na cidade de Franca, São Paulo. Através de visualizações dinâmicas e filtros intuitivos, os usuários podem explorar diversas métricas relacionadas aos acidentes, como quantidade de óbitos por ano, distribuição por dia da semana, tipo de veículo envolvido, faixa etária das vítimas, entre outros.
